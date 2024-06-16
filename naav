@@ -1,20 +1,93 @@
 #!/bin/bash
-source_folder=$1
-search_itam=$2
+file_option=$1
+source_folder=$2
+search_itam=$3
 
-if [ ! -d "$source_folder" ]; then
+usage() {
+    echo "Usage: $(basename "$0") [-h|--help] [-v|--version] [-f <source_folder> <search_item>] [-d <source_folder> <search_item>]"
+    echo "  -h, --help      Display this help message"
+    echo "  -v, --version   Display version information"
+    echo "  -f              Find file in the specified folder"
+    echo "  -d              Find directory in the specified folder"
+    exit 1
+}
+
+# Function to display version
+version() {
+    echo "$(basename "$0") version 0.1"
+    exit 1
+}
+
+# Check if no options are provided
+if [[ -z "$file_option" ]]; then
+    usage
+fi
+
+# Parse command-line options
+case "$file_option" in
+    -h|--help)
+        usage
+        ;;
+    -v|--version)
+        version
+        ;;
+	
+esac
+
+if [[ "$file_option" == "-f" ]]; then
+	output=$(find /$source_folder -name $search_itam -type f 2>/dev/null)
+        IFS=$'\n' read -rd '' -a directories <<<"$output"
+
+        select dir in "${directories[@]}"; do
+                if [ -n "$dir" ]; then
+                        #cat "$dir"
+                        #exec $SHEL
+			echo "You selected $dir. How would you like to open it?"
+                        PS3="Enter your choice: "
+                        options=("vim" "nano" "cat" "Exit")
+                        select opt in "${options[@]}"; do
+                            case $opt in
+                             "vim")
+                                vim "$dir"
+                                break
+                               ;;
+                             "nano")
+                                nano "$dir"
+                                break
+                                ;;
+                            "cat")
+                                cat "$dir"
+                                break
+                                ;;
+                            "Exit")
+                                break
+                                ;;
+                            *)
+                               echo "Invalid option."
+                                ;;
+			esac
+
+		done
+            break
+        else
+            echo "Invalid selection."
+        fi
+    done
+
+elif [[ "$file_option" == "-d" ]]; then
 	output=$(find /$source_folder -name $search_itam -type d 2>/dev/null)
-	IFS=$'\n' read -rd '' -a directories <<<"$output"
+        IFS=$'\n' read -rd '' -a directories <<<"$output"
 
-	select dir in "${directories[@]}"; do
-    		if [ -n "$dir" ]; then
-       			cd "$dir"
-			exec $SHELL
-		break
-    	else
+        select dir in "${directories[@]}"; do
+                if [ -n "$dir" ]; then
+                        cd "$dir"
+                        exec $SHELL
+                break
+	else
         	echo "Invalid selection."
     	fi
 	done
 else
 	exit
 fi
+
