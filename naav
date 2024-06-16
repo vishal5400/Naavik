@@ -1,0 +1,20 @@
+#!/bin/bash
+source_folder=$1
+search_itam=$2
+
+if [ ! -d "$source_folder" ]; then
+	output=$(find /$source_folder -name $search_itam -type d 2>/dev/null)
+	IFS=$'\n' read -rd '' -a directories <<<"$output"
+
+	select dir in "${directories[@]}"; do
+    		if [ -n "$dir" ]; then
+       			cd "$dir"
+			exec $SHELL
+		break
+    	else
+        	echo "Invalid selection."
+    	fi
+	done
+else
+	exit
+fi
